@@ -427,7 +427,7 @@ class CSysLimitBase
 };
 
 #help_index "Memory/Info"
-#define MEM_E820_ENTRIES_NUM	48
+#define MEM_E820_ENTRIES_NUM	256
 #define MEM_E820t_USABLE		1
 #define MEM_E820t_RESERVED		2
 #define MEM_E820t_ACPI			3
@@ -536,13 +536,14 @@ class CVBEMode
 };
 #assert sizeof(CVBEMode) == 256
 
-class CVBEModeShort
+class CVideoInfo
 {
-	U16 	width,
-			height,
-			mode_num;
-	U32 	max_pixel_clock; //TODO refresh rates.
+	U16 width;
+	U16 height;
 };
+
+#define ZEALBOOTER_LIMINE_SIGNATURE_1	0xaa23c08ed10bd4d7; // See $LK+PU,"CORE0_32BIT_INIT",A="FF:::/Kernel/KStart32.ZC,JMP @@"$
+#define ZEALBOOTER_LIMINE_SIGNATURE_2	0xf6ceba7d4b74179a; //
 
 #help_index "Boot"
 class CKernel
@@ -564,11 +565,16 @@ class CKernel
 	U16				sys_pci_buses;
 	;$$ = ($$ + 15) & -16;
 	CGDT			sys_gdt;
-	U32				sys_font_ptr;
-	CVBEInfo		sys_vbe_info;
-	CVBEModeShort	sys_vbe_modes[VBE_MODES_NUM];
-	CVBEMode		sys_vbe_mode;
-	U16				sys_vbe_mode_num;
+	U64				sys_framebuffer_addr;
+	U64				sys_framebuffer_width;
+	U64				sys_framebuffer_height;
+	U64				sys_framebuffer_pitch;
+	U8				sys_framebuffer_bpp;
+	U64				sys_smbios_entry;
+	U64				sys_disk_uuid[2];
+	U32				sys_boot_stack;
+	Bool			sys_is_uefi_booted;
+	CVideoInfo		sys_framebuffer_list[VBE_MODES_NUM];
 };
 
 //Run-Levels
@@ -907,7 +913,7 @@ public class CHashImport:CHashSrcSym
 };
 
 #help_index "Compiler/Internal"
-#define PTR_STARS_NUM 	4
+#define PTR_STARS_NUM 	3
 
 //Member List Flags
 #define MLF_DEFAULT_AVAILABLE 		1
@@ -2722,7 +2728,7 @@ class CPCIDev
 
 //Command FIS flags
 #define AHCI_CF_DESCf_C		7	//'Command' bit. Set when FIS is an ATA command.
-#define AHCI_CF_DESCF_C		(1 << AHCI_CF_DESCF_C)
+#define AHCI_CF_DESCF_C		(1 << AHCI_CF_DESCf_C)
 
 //Port register flags
 //Command and Status register flags
@@ -3015,7 +3021,7 @@ class CAtapiModeWriteList
 #define FILEMASK_AOT	"*.ZC*;*.HH*;*.PRJ*"
 #define FILEMASK_SRC	"*.ZC*;*.HH*;*.IN*;*.PRJ*"
 #define FILEMASK_DD 	FILEMASK_SRC ";*.DD*"
-#define FILEMASK_TXT	FILEMASK_DD ";*.TXT*"
+#define FILEMASK_TXT	FILEMASK_DD ";*.TXT*;*.CFG*"
 #define FILEMASK_GR 	"*.GR*"
 
 #help_index "File/Low Level"
@@ -3144,6 +3150,30 @@ class CPalindromeU32
 	U32 	little, big;
 };
 
+class CISODate
+{
+	U8	year, mon, day, hour, min, sec, sec100;
+};
+
+class CISODirEntry
+{
+	U8				len, ext_attr_len;
+	CPalindromeU32	loc;
+	CPalindromeU32	size;
+	CISODate		date;
+	U8				flags, file_unit_size, interleave;
+	CPalindromeU16	vol_seq_num;
+	U8				name_len, name;
+};
+
+class CISOPathEntry
+{
+	U8	name_len, zero;
+	U32	blk;
+	U16	parent_entry_num,
+		name[1]; //Aligned to U16 boundaries
+};
+
 //ISO9660
 #define ISOT_BOOT_RECORD		0
 #define ISOT_PRI_VOL_DESC 		1
@@ -3151,33 +3181,36 @@ class CPalindromeU32
 #define ISOT_VOL_DRIVE_DESC 	3
 #define ISOT_TERMINATOR 		255
 
-class CISODirEntry
-{
-	U8				pad[2];
-	CPalindromeU32	loc;
-	U8				pad[24];
-};
-
 class CISOPriDesc
 {
 	U8				type,
 					id[5],
 					version,
-					pad[73];
+					unused1,
+					system_id[32],
+					vol_id[32],
+					unused2[8];
 	CPalindromeU32	vol_space_size;
-	U8				pad[32];
+	U8				unused3[32];
 	CPalindromeU16	vol_set_size;
 	CPalindromeU16	vol_seq_num;
 	CPalindromeU16	log_block_size;
-	U8				pad[24];
+	CPalindromeU32	path_table_size;
+	U32				type_l_path_table,
+					opt_type_l_path_table,
+					type_m_path_table,
+					opt_type_m_path_table;
 	CISODirEntry	root_dir_record;
-	U8				pad[128],
+	U8				vol_set_id[128],
 					publisher_id[128],
 					preparer_id[128],
 					pad[307],
 					file_structure_version,
 					pad[1166];
 };
+
+#define ISO_BASE_YEAR	1900
+#define ISO_ATTR_DIR	2
 
 //Red Sea Attributes
 //See $LK,"ST_FILE_ATTRS",A="MN:ST_FILE_ATTRS"$
@@ -3343,7 +3376,7 @@ public class CBlkDev
 #define FSt_NULL		0
 #define FSt_REDSEA		1 //Supported
 #define FSt_FAT32 		2 //Supported except for short names, to some degree
-#define FSt_ISO9660 	3 //Not Supported
+#define FSt_ISO9660 	3 //Supported (CD/DVD)
 #define FSt_NTFS		4 //Not Supported
 #define FSt_LINUX		5 //Not Supported
 #define FSt_SWAP		6 //Not Supported
@@ -4251,7 +4284,6 @@ public class CTextGlobals
 	U32 	*raw_screen, *fb_alias;
 	I64 	 rows, cols;	//Use TEXT_ROWS,TEXT_COLS
 	U64 	*font, *aux_font, screen_size, buffer_size;
-	U8		*vga_alias;
 	U8		 border_chars[16];
 	Bool	 is_fb_busy;
 };
@@ -4359,10 +4391,6 @@ public class CDC
 	I64				 db_z; //private
 #assert !($$ & 7)
 };
-
-#help_index "Devices"
-//VGA Memory
-#define VGAM_GRAPHICS 	0xA0000
 
 #define "Char/Input;StdIn"
 //StrGet flags
@@ -4488,7 +4516,7 @@ public class CDebugGlobals
 #define BOOT_SRC_DVD		4
 
 // $LK,"In",A="MN:In"$("") StdIn for call to $LK,"BootHDIns",A="MN:BootHDIns"$().
-#define STD_DISTRO_DVD_CONFIG 	"TB\nScale2Mem(2048,0x40000)\nT \n\n\n\n"
+#define STD_DISTRO_DVD_CONFIG 	"TB\nScale2Mem(2048,0x40000)\nT\n\n\n\n"
 
 #help_index "Registry"
 //Registry sys_message_flags. $LK,"RegOneTimePopUp",A="MN:RegOneTimePopUp"$()

@@ -1,11 +1,25 @@
 #!/bin/sh
 #
 # Sync VM <--> Repo.
-# Run this script inside build/ directory.
 #
 # On copying from virtual disk to src/, the directory is emptied before copy. Comment out "rm -rf ../src/*" to copy onto src.
 #
 #
+
+# make sure we are in the correct directory
+SCRIPT_DIR=$(realpath "$(dirname "$0")")
+SCRIPT_NAME=$(basename "$0")
+EXPECTED_DIR=$(realpath "$PWD")
+
+# Change this if your default QEMU version does not work and you have installed a different version elsewhere.
+QEMU_BIN_PATH=$(dirname "$(which qemu-system-x86_64)")
+
+if test "${EXPECTED_DIR}" != "${SCRIPT_DIR}"
+then
+	( cd "$SCRIPT_DIR" || exit ; "./$SCRIPT_NAME" "$@" );
+	exit
+fi
+
 
 # Uncomment if you use doas instead of sudo
 #alias sudo=doas
@@ -39,7 +53,7 @@ print_usage() {
 
 mount_vdisk() {
 	echo "Mounting virtual disk..."
-	sudo qemu-nbd -c /dev/nbd0 "$ZEALDISK"
+	sudo $QEMU_BIN_PATH/qemu-nbd -c /dev/nbd0 "$ZEALDISK"
 	sudo partprobe /dev/nbd0       
 	sudo mount /dev/nbd0p1 $TMPMOUNT
 }
@@ -48,7 +62,7 @@ umount_vdisk() {
 	echo "Unmounting virtual disk..."
 	sync
 	sudo umount $TMPMOUNT
-	sudo qemu-nbd -d /dev/nbd0
+	sudo $QEMU_BIN_PATH/qemu-nbd -d /dev/nbd0
 	sudo rm -rf $TMPMOUNT
 }
 

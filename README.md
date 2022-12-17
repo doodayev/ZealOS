@@ -1,6 +1,6 @@
 # ZealOS
 
-[![Discord](https://img.shields.io/discord/934200098144022609?color=7289DA&label=Discord&logo=discord&logoColor=white)](https://discord.gg/rK6U3xdr7D)
+[![Discord](https://img.shields.io/discord/934200098144022609?color=7289DA&label=Discord&logo=discord&logoColor=white)](https://discord.gg/rK6U3xdr7D) [![](https://img.shields.io/badge/wiki-documentation-forestgreen)](https://github.com/Zeal-Operating-System/ZealOS/wiki)
 
 The Zeal Operating System is a modernized, professional fork of the 64-bit Temple Operating System. Guiding principles of development include transparency, full user control, and adherence to public-domain/open-source implementations.
 
@@ -16,6 +16,7 @@ Features in development include:
   - [32-bit color VBE graphics](https://github.com/TempleProgramming/HolyGL)
   - Fully-functional AHCI support
   - Network card drivers and a networking stack
+  - UEFI booting via [BSD2-licensed Limine bootloader](https://github.com/limine-bootloader/limine) and [Public Domain ZealBooter prekernel](/zealbooter/zealbooter.c)
 
 [Changes include](https://zeal-operating-system.github.io/Doc/ChangeLog.DD.html):
   - 60 FPS
@@ -33,7 +34,7 @@ Features in development include:
     * If using Windows, [Hyper-V must be enabled.](https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v#enable-the-hyper-v-role-through-settings)
 - Working knowledge of the C programming language.
 
-To create a Distro ISO, run the `build-iso` script in the `build` directory. Check the Wiki guide for details on [building an ISO](https://github.com/Zeal-Operating-System/ZealOS/wiki/Building-an-ISO). After creating an ISO, see the Wiki guides on installing in [VirtualBox](https://github.com/Zeal-Operating-System/ZealOS/wiki/Installing-(Virtualbox)), [VMWare](https://github.com/Zeal-Operating-System/ZealOS/wiki/Installing-(VMWare)), and [bare-metal](https://github.com/Zeal-Operating-System/ZealOS/wiki/Installing-(Bare%E2%80%90metal)).
+To create a Distro ISO, run the `build-iso` script. Check the Wiki guide for details on [building an ISO](https://github.com/Zeal-Operating-System/ZealOS/wiki/Building-an-ISO). After creating an ISO, see the Wiki guides on installing in [VirtualBox](https://github.com/Zeal-Operating-System/ZealOS/wiki/Installing-(Virtualbox)), [VMWare](https://github.com/Zeal-Operating-System/ZealOS/wiki/Installing-(VMWare)), and [bare-metal](https://github.com/Zeal-Operating-System/ZealOS/wiki/Installing-(Bare%E2%80%90metal)).
 
 ### Contributing
 
@@ -51,7 +52,7 @@ In July of 2021, ZealOS was forked from ZenithOS.
 
 ## Screenshots
 
-Network Report, UDP Chat Application and AutoComplete, with Stars wallpaper
+Network Report, Gopher Client, FTP Client, GrDir, and AutoComplete, with Stars wallpaper
 
 ![](/screenshots/screenshot3.png)
 
