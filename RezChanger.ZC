@@ -1,0 +1,75 @@
+/* This is my attempt at simplifying
+the process of changing your resolution on
+Zeal because honestly going to KStart16
+and then typing in BootHDIns is kind of annoying
+*/
+
+
+
+
+/*This is really hacky
+I want to test and see if I can just check all lines
+and use StrNCompare("REQUESTED_SCREEN_WIDTH:", DocLineRead(KS16, SomeLine), 22);
+and StrNCompare("REQUESTED_SCREEN_HEIGHT:", DocLineRead(KS16, SomeLine), 22);
+with a for loop so that in case KStart16 changes we don't break the code
+*/
+
+
+U0 ZealLikesThese()
+{
+	"Zeal likes these custom resolutions: \n";
+	"944 by 492 \n";
+	"1280 by 720 \n";
+	"1400 by 900 \n";
+	"1280 by 800 \n";
+	"1536 by 894 \n";
+	"1600 by 900 \n";
+	"1680 by 1050 \n";
+	
+}
+
+
+U0 PrintTheLine(U8 *KS16 = "::/Kernel/KStart16.ZC")
+{
+	I64 WidthLine = 73;
+	I64 HeightLine = 74;
+	Print("Right now the current resolutions are: \n");
+	Print(DocLineRead(KS16, WidthLine));
+	"\n";
+	Print(DocLineRead(KS16, HeightLine));
+	"\n\n";
+}
+
+U0 WriteTheLine(U8 *Width="1024", U8 *Height="768", U8 *KS16 = "::/Kernel/KStart16.ZC")
+{
+	I64 WidthLine = 73;
+	I64 HeightLine = 74;
+	U8* LineForWidth = "REQUESTED_SCREEN_WIDTH:     DU16    ";
+	U8* LineForHeight = "REQUESTED_SCREEN_HEIGHT:    DU16    ";
+	U8* Semi = ";";	
+
+	U8* Together1 = MStrPrint("%s%s%s", LineForWidth, Width, Semi);
+	U8* Together2 = MStrPrint("%s%s%s", LineForHeight, Height, Semi);	
+
+	DocLineWrite(KS16, WidthLine, Together1);
+	DocLineWrite(KS16, HeightLine, Together2);
+}
+
+
+U0 DoEverything(U8 *Width="1024", U8 *Height="768", U8 *KS16 ="::/Kernel/KStart16.ZC")
+{
+	ZealLikesThese;
+	WriteTheLine(Width, Height, KS16);
+	PrintTheLine;
+	BootHDIns;
+}
+
+/*Resolutions Zeal does NOT like on VirtualBox!
+700 by 525
+800 by 500
+900 by 450
+900 by 480
+900 by 675
+900 by 506
+950 by 534
+*/	
